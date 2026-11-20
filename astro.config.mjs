@@ -1,7 +1,7 @@
 // @ts-check
 import { unified } from "@astrojs/markdown-remark";
 import tailwindcss from "@tailwindcss/vite";
-import { defineConfig, fontProviders } from "astro/config";
+import { defineConfig } from "astro/config";
 import { fileURLToPath } from "url";
 import path from "path";
 import pagefind from "astro-pagefind";
@@ -17,35 +17,10 @@ import mdx from "@astrojs/mdx";
 
 import sitemap from "@astrojs/sitemap";
 
-// bejamas:astro-fonts:start
-/** @type {any} */
-const BEJAMAS_ASTRO_FONTS = [
-  {
-    provider: fontProviders.google(),
-    name: "Geist Mono",
-    cssVariable: "--font-mono",
-    subsets: ["latin"],
-  },
-  {
-    provider: fontProviders.google(),
-    name: "Geist",
-    cssVariable: "--font-sans",
-    subsets: ["latin"],
-  },
-  {
-    provider: fontProviders.google(),
-    name: "Spectral",
-    cssVariable: "--font-heading",
-    subsets: ["latin"],
-  },
-];
-// bejamas:astro-fonts:end
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   site: SITE.url,
-  fonts: BEJAMAS_ASTRO_FONTS,
   vite: {
     plugins: [tailwindcss()],
     resolve: {
