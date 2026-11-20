@@ -1,0 +1,239 @@
+---
+import type { Thread } from "@/lib/annotations/comments";
+interface Props {
+  threads: Thread[];
+}
+const { threads } = Astro.props;
+---
+
+<section class="mb-8" aria-label="页边批注" data-pagefind-ignore>
+  <h2 class="font-serif text-xl">页边批注 · {threads.length}</h2>
+  {
+    threads.map((t) => (
+      <section
+        id={"thread-" + t.id}
+        tabindex="-1"
+        class="thread border-b border-border py-4"
+      >
+        <div data-thread-content>
+          <small>{t.status === "open" ? "讨论中" : "已解决"}</small>
+          {t.messages.map((m) => (
+            <div class="my-2">
+              <b>{m.author}</b>{" "}
+              <time
+                class="text-xs text-muted-foreground"
+                datetime={m.createdAt}
+              >
+                {m.createdAt.slice(0, 10)}
+              </time>
+              <p class="whitespace-pre-wrap">{m.body}</p>
+            </div>
+          ))}
+        </div>
+        <a class="text-sm underline" href={"#range-" + t.id}>
+          返回原文
+        </a>
+      </section>
+    ))
+  }
+  <dialog id="note-sheet" aria-labelledby="note-sheet-title" class="md:hidden">
+    <header
+      class="flex items-center justify-between gap-4 border-b border-border px-5 py-2"
+    >
+      <h2 id="note-sheet-title" class="font-serif text-lg">页边批注</h2>
+      <button type="button" autofocus data-close class="min-h-11 px-2"
+        >关闭</button
+      >
+    </header>
+    <div data-sheet-body>
+      <button type="button" data-back hidden class="mb-2 min-h-11 underline"
+        >返回讨论列表</button
+      >
+      <div data-sheet-content></div>
+    </div>
+  </dialog>
+  <div id="choices" popover aria-label="选择批注"></div>
+</section>
+<style is:global>
+  [data-threads] {
+    background: #f6e5a5;
+    color: #322611;
+    border-bottom: 1px solid #9a752d;
+    cursor: pointer;
+  }
+  [data-threads*=" "] {
+    background: #edcb87;
+  }
+  [id^="range-"],
+  .thread {
+    scroll-margin-top: 6rem;
+  }
+  [id^="range-"]:target + [data-threads],
+  .thread:target {
+    outline: 2px solid #a48239;
+    outline-offset: 2px;
+  }
+  #choices {
+    margin: auto;
+    max-width: 24rem;
+    background: var(--background);
+    color: var(--foreground);
+    padding: 1rem;
+    border: 1px solid var(--border);
+  }
+  #choices a {
+    display: block;
+    padding: 0.5rem;
+    text-decoration: underline;
+  }
+  #choices::backdrop {
+    background: #15181055;
+  }
+  html:has(#note-sheet[open]),
+  body:has(#note-sheet[open]) {
+    overflow: hidden;
+  }
+  #note-sheet {
+    position: fixed;
+    inset: auto 0 0;
+    margin: 0;
+    width: 100%;
+    max-width: none;
+    max-height: 52dvh;
+    border-radius: 1rem 1rem 0 0;
+    background: var(--background);
+    color: var(--foreground);
+    padding-bottom: env(safe-area-inset-bottom);
+    overflow: hidden;
+  }
+  #note-sheet[open] {
+    display: flex;
+    flex-direction: column;
+  }
+  #note-sheet::backdrop {
+    background: rgb(0 0 0 / 38%);
+  }
+  #note-sheet [data-sheet-body] {
+    padding: 1rem 1.25rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    overflow-wrap: anywhere;
+  }
+  #note-sheet [data-sheet-content] > button {
+    display: block;
+    width: 100%;
+    padding: 0.75rem 0;
+    text-align: start;
+    border-bottom: 1px solid var(--border);
+  }
+</style>
+
+<script>
+  document.addEventListener("astro:page-load", () => {
+    const dialog = document.querySelector<HTMLDialogElement>("#note-sheet");
+    const chooser = document.querySelector<HTMLElement>("#choices");
+    if (!dialog || !chooser) return;
+    const sheet = dialog;
+    const menu = chooser;
+    const back = sheet.querySelector<HTMLButtonElement>("[data-back]")!;
+    const close = sheet.querySelector<HTMLButtonElement>("[data-close]")!;
+    const body = sheet.querySelector<HTMLElement>("[data-sheet-body]")!;
+    const content = sheet.querySelector<HTMLElement>("[data-sheet-content]")!;
+    const mobile = matchMedia("(width < 48rem)"); // Veka's md sidebar breakpoint.
+    let trigger: HTMLElement | undefined;
+    let threads: HTMLElement[] = [];
+
+    function showThread(thread: HTMLElement) {
+      const messages = thread.querySelector("[data-thread-content]")!;
+      content.replaceChildren(messages.cloneNode(true));
+      back.hidden = threads.length < 2;
+      body.scrollTop = 0;
+      if (sheet.open) back.focus({ preventScroll: true });
+    }
+
+    function showList() {
+      back.hidden = true;
+      content.replaceChildren(
+        ...threads.map((thread) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = thread.querySelector("p")!.textContent;
+          button.onclick = () => showThread(thread);
+          return button;
+        }),
+      );
+      body.scrollTop = 0;
+      if (sheet.open)
+        content.querySelector("button")?.focus({ preventScroll: true });
+    }
+
+    function openThreads(mark: HTMLElement) {
+      threads = mark.dataset
+        .threads!.split(" ")
+        .map((id) => document.getElementById("thread-" + id)!);
+      if (mobile.matches) {
+        trigger = mark;
+        if (threads.length === 1) showThread(threads[0]);
+        else showList();
+        sheet.showModal();
+        return;
+      }
+      if (threads.length === 1) {
+        location.hash = threads[0].id;
+        threads[0].focus();
+        return;
+      }
+      menu.replaceChildren(
+        ...threads.map((thread) => {
+          const link = document.createElement("a");
+          link.href = "#" + thread.id;
+          link.textContent = thread.querySelector("p")!.textContent;
+          link.onclick = () => menu.hidePopover();
+          return link;
+        }),
+      );
+      menu.showPopover();
+      menu.querySelector("a")?.focus();
+    }
+
+    close.onclick = () => sheet.close();
+    back.onclick = showList;
+    sheet.onclick = (event) => {
+      if (
+        event.target === sheet &&
+        event.clientY < sheet.getBoundingClientRect().top
+      )
+        sheet.close();
+    };
+    sheet.onclose = () => trigger?.focus({ preventScroll: true });
+    const onResize = () => {
+      if (sheet.open) sheet.close();
+      if (menu.matches(":popover-open")) menu.hidePopover();
+    };
+    mobile.addEventListener("change", onResize);
+    document.addEventListener(
+      "astro:before-swap",
+      () => {
+        mobile.removeEventListener("change", onResize);
+        trigger = undefined;
+        if (sheet.open) sheet.close();
+      },
+      { once: true },
+    );
+
+    for (const mark of document.querySelectorAll<HTMLElement>(
+      "[data-threads]",
+    )) {
+      if (mark.closest("a")) continue;
+      mark.tabIndex = 0;
+      mark.setAttribute("role", "button");
+      mark.onclick = () => openThreads(mark);
+      mark.onkeydown = (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openThreads(mark);
+        }
+      };
+    }
+  });
+</script>

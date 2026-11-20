@@ -33,7 +33,8 @@
     "node-html-parser": "^9.0.0",
     "remark-definition-list": "^2.0.0",
     "tailwind-merge": "^3.6.0",
-    "tailwindcss": "^4.3.2"
+    "tailwindcss": "^4.3.2",
+    "micromark-util-decode-string": "2.0.1"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",

@@ -21,6 +21,7 @@ interface Props {
   createdAt: Date;
   updatedAt: Date;
   headings?: Heading[];
+  hasNotes?: boolean;
   tags?: string[];
   rawContent?: string;
   downloadFilename?: string;
@@ -72,8 +73,9 @@ const breadcrumbs = generateBreadcrumbs(Astro.url.pathname);
         </article>
       </main>
 
-      <aside class="hidden md:block">
-        <WikiSidebarRight headings={headings} {tags} />
+      <aside class:list={[!Astro.props.hasNotes && "hidden md:block"]}>
+        <slot name="notes" />
+        <div class="hidden md:block"><WikiSidebarRight headings={headings} {tags} /></div>
       </aside>
     </div>
 

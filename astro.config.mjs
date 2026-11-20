@@ -6,6 +6,7 @@ import { fileURLToPath } from "url";
 import path from "path";
 import pagefind from "astro-pagefind";
 import { SITE } from "./src/lib/site-config";
+import { remarkRanges } from "./src/lib/annotations/remark-ranges.mjs";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import wikiLink from "remark-wiki-link";
@@ -33,6 +34,7 @@ export default defineConfig({
   markdown: {
     processor: unified({
       remarkPlugins: [
+        remarkRanges,
         remarkMath,
         [wikiLink, wikiLinkOptions],
         remarkDefinitionList,

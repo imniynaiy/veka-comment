@@ -2,6 +2,9 @@
 import { getCollection, render } from "astro:content";
 import WikiLayout from "@/layouts/WikiLayout.astro";
 
+import MarginNotes from "@/components/wiki/MarginNotes.astro";
+import { comments } from "@/lib/annotations/comments";
+
 export async function getStaticPaths() {
   const wikiEntries = await getCollection("wiki");
 
@@ -16,7 +19,16 @@ export async function getStaticPaths() {
 }
 
 const { entry } = Astro.props;
-const { Content, headings } = await render(entry);
+const { Content, headings, remarkPluginFrontmatter } = await render(entry);
+const sidecars = import.meta.glob("/src/content/wiki/**/*.comments.json", { import: "default" });
+const key = "/" + entry.filePath!.replace(/^.*?src\/content\//, "src/content/").replace(/\.mdx?$/, ".comments.json");
+const sidecar = sidecars[key];
+const { threads } = comments.parse(sidecar ? await sidecar() : { version: 1, threads: [] });
+const ids = new Set<string>(remarkPluginFrontmatter?.rangeThreadIds ?? []);
+for (const thread of threads) {
+  if (!ids.delete(thread.id)) throw new Error(key + " 缺少锚点或重复讨论串 " + thread.id);
+}
+if (ids.size) throw new Error(key + " 缺少讨论串 " + [...ids].join(", "));
 const { title, description, createdAt, updatedAt, tags, growthStage } =
   entry.data;
 ---
@@ -24,6 +36,7 @@ const { title, description, createdAt, updatedAt, tags, growthStage } =
 <WikiLayout
   title={title}
   description={description ?? title}
+  hasNotes={threads.length > 0}
   headings={headings}
   tags={tags}
   createdAt={createdAt}
@@ -32,7 +45,6 @@ const { title, description, createdAt, updatedAt, tags, growthStage } =
   rawContent={entry.body}
   downloadFilename={entry.id.split("/").pop()}
 >
-  <article class="custom-prose max-w-none">
-    <Content />
-  </article>
+  <Content />
+  <Fragment slot="notes">{threads.length > 0 && <MarginNotes {threads} />}</Fragment>
 </WikiLayout>

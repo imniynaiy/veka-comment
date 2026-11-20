@@ -44,6 +44,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      micromark-util-decode-string:
+        specifier: 2.0.1
+        version: 2.0.1
       node-html-parser:
         specifier: ^9.0.0
         version: 9.0.0
