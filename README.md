@@ -120,3 +120,15 @@ SEO features (auto-generated per page):
 Veka is configured as a Static Site Generator (SSG) by default. Deployment is seamless on platforms like Vercel, Netlify, or Cloudflare Pages.
 Make sure your build command on the target platform is set to: `pnpm run build`
 This command will automatically run `astro build` and trigger the pagefind integration to build the search index.
+
+## 中文范围批注
+
+在 `src/content/wiki/` 下编辑 Markdown，在同目录的同名 `.comments.json` 文件中维护讨论。示例文章是 `notes/margins.md`，对应页面为 `/wiki/notes/margins/`。
+
+```markdown
+支持<!--c:a:start-->离线<!--c:b:start-->编辑<!--c:a:end-->和同步<!--c:b:end-->。
+```
+
+每个线程需要唯一 ID、一对起止标记，以及至少一条含 `author`、`createdAt` 和 `body` 的消息。状态可取 `open` 或 `resolved`。完整 JSON 示例见 [margins.comments.json](src/content/wiki/notes/margins.comments.json)。普通文章可省略批注文件。所有消息随 HTML 公开发布。
+
+在项目目录运行 `pnpm install --frozen-lockfile` 和 `pnpm build`，然后运行 `pnpm preview`。构建后可运行 `node --test tests/range-page.test.mjs` 检查示例页面的高亮、讨论和返回链接。

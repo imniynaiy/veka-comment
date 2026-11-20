@@ -1,0 +1,5 @@
+{"version":1,"threads":[
+{"id":"repeat","status":"open","messages":[{"author":"林","createdAt":"2026-11-18T09:00:00Z","body":"把三个“又”连起来读，会读出与第一遍完全不同的节奏。"}]},
+{"id":"pace","status":"resolved","messages":[{"author":"周","createdAt":"2026-11-18T10:00:00Z","body":"这一处停顿是标点带来的，还是分段带来的？"},{"author":"林","createdAt":"2026-11-19T08:00:00Z","body":"试着去掉空行读了一次，我更倾向于后者。"}]},
+{"id":"space","status":"open","messages":[{"author":"周","createdAt":"2026-11-19T11:00:00Z","body":"喜欢把这一节的标题和第一句连在一起读。"}]}
+]}
